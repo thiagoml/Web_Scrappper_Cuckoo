@@ -1,0 +1,383 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8" />
+        <title>Cuckoo Sandbox</title>
+        <link rel="shortcut icon" type="image/png" href=" /static/favicon-64x64.png" sizes="64x64" />
+        <link rel="shortcut icon" type="image/png" href=" /static/favicon-32x32.png" sizes="32x32" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Cuckoo Sandbox" />
+        <meta name="author" content="Cuckoo Sandbox" />
+
+        <link href="/static/css/vendor.css" rel="stylesheet" type="text/css" />
+        <link href="/static/css/main.css" rel="stylesheet" type="text/css" />
+        <link href="/static/css/font-awesome.css" rel="stylesheet" type="text/css" />
+
+        
+          <script>
+            var task_id = undefined;
+          </script>
+        
+
+        <script src="/static/js/vendor.js"></script>
+
+        
+
+        <script src="/static/js/handlebars-templates.js"></script>
+        <script src="/static/js/hexdump.js"></script>
+        <script src="/static/js/cuckoo/loader.js"></script>
+        <script src="/static/js/cuckoo/sticky.js"></script>
+        <script src="/static/js/cuckoo/analysis_sidebar.js"></script>
+        <script src="/static/js/cuckoo/analysis_feedback.js"></script>
+        <script src="/static/js/cuckoo/submission.js"></script>
+        <script src="/static/js/cuckoo/process_tree.js"></script>
+        <script src="/static/js/cuckoo/recent.js"></script>
+        <script src="/static/js/cuckoo/analysis_network.js"></script>
+        <script src="/static/js/cuckoo/rdp.js"></script>
+        <script src="/static/js/cuckoo/app.js"></script>
+
+    </head>
+
+    <body
+
+        
+
+        id="analysis/recent"
+
+    >
+
+    
+
+<nav class="app-nav" id="primary-nav">
+
+	<a href="/" class="logo">
+		<img src="/static/graphic/cuckoo_inverse.png" />
+	</a>
+
+	<ul class="app-nav__nav--primary">
+		<li ><a title="Dashboard" href="/dashboard/"><i class="fa fa-tachometer"></i> Dashboard</a></li>
+		<li class="active"><a href="/analysis/" title="Recent"><i class="fa fa-th-list"></i> Recent</a></li>
+		<li ><a href="/analysis/pending/" title="Pending"><i class="fa fa-cogs"></i> Pending</a></li>
+		<li ><a href="/analysis/search/" title="Search"><i class="fa fa-search"></i> Search</a></li>
+	</ul>
+
+	<ul class="app-nav__nav--right">
+		<li>
+			<a href="/submit/" class="button outline">
+				<span data-responsive="nav-expanded">Submit</span>
+				<span data-responsive="nav-collapsed"><i class="fa fa-upload"></i></span>
+			</a>
+		</li>
+		<li>
+			<a href="/analysis/import/" class="button outline">
+				<span data-responsive="nav-expanded">Import</span>
+				<span data-responsive="nav-collapsed"><i class="fa fa-download"></i></span>
+			</a>
+		</li>
+		<li class="app-nav__dropdown--parent">
+			<a href="#" id="select-theme">
+				<i class="fa fa-paint-brush"></i>
+			</a>
+			<div class="app-nav__dropdown">
+				<h5>Select theme</h5>
+				<ul class="flex-distribute theme-selection">
+					<li><a class="active" href="theme:default">Default</a></li>
+					<li><a  href="theme:cyborg">Cyborg</a></li>
+					<li><a  href="theme:night">Night</a></li>
+				</ul>
+			</div>
+		</li>
+	</ul>
+
+</nav>
+
+
+    <div class="hidden csrf_placeholder"><input type='hidden' name='csrfmiddlewaretoken' value='k2z3m4yNmQ6ASFJIqn4dnHC8qz6iS2yQ' /></div>
+
+<div class="app">
+	
+
+	<div class="app-message hidden" data-message="browser-recommendation">
+		<h5><i class="fa fa-warning"></i> Browser recommendation</h5>
+		<p>Hello, we noticed that you are using <span class="browser"></span>. For the best performance of this application, we recommend to use <a href="https://www.google.com/chrome/browser/desktop/index.html" title="Chrome" target="_blank">Chrome</a>, <a href="https://www.mozilla.org/nl/firefox/new/" title="Firefox" target="_blank">Firefox</a> or any browser that supports <a href="https://webkit.org/" title="WebKit" target="_blank">WebKit</a>.</p>
+		<div class="clearfix">
+			<a href="#dismiss" class="button pull-left">Dismiss</a>
+			<a href="#hide" class="button inversed pull-right">Don't show again</a>
+		</div>
+	</div>
+
+	
+
+    <div id="recent_analysis">
+
+        <div class="nav_container" style="margin-bottom:30px;">
+            <div></div>
+            <div id="item"><a href="#" data-filter="cat_files">Files</a></div>
+            <div id="item"><a href="#" data-filter="cat_urls">URLs</a></div>
+            <div id="item" class="item-spacer"></div>
+            <div id="item"><a href="#" data-filter="score_0-4">Score 0 - 4</a></div>
+            <div id="item"><a href="#" data-filter="score_4-7">Score 4 - 7</a></div>
+            <div id="item"><a href="#" data-filter="score_7-10">Score 7 - 10</a></div>
+            <!--<div id="item"><a href="#" data-filter="pack_pdf">PDF</a></div>
+            <div id="item"><a href="#" data-filter="pack_office">Office</a></div>-->
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <style>
+                    table#recent span.badge{
+                        border-radius: 0px;
+                    }
+                </style>
+
+                <div class="loading">
+    <div class="spinner">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <p class="loading-message"></p>
+</div>	
+
+                <table id="recent" class="table table-striped table-responsive" style="table-layout: fixed;">
+                    <tbody>
+                    </tbody>
+                </table>
+
+                <div id="no_more_results" class="container-fluid center">
+                    <span style="color: #a5a5a5;"></span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+	
+</div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container-fluid center">
+            <a href="#">Back to the top</a>
+        </div>
+    </footer>
+    <div id="footer-extra">
+        <div class="container-fluid center">
+            <div>&copy;2010-2018 <a href="https://www.cuckoosandbox.org" target="_blank">Cuckoo Sandbox</a></div>
+        </div>
+    </div>
+
+    <!-- feedback form modal -->
+    <div class="modal fade modal-cuckoo" id="feedback_form">
+  <form class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4><i class="fa fa-bug"></i> Feedback</h4>
+      </div>
+      <p class="modal-section arrow">Expecting different results? Share this analysis report with us and we’ll investigate it. Please include a brief message of what you had expected to see and what you got instead.</p>
+
+      <div class="modal-section modal-form arrow">
+        <div class="form-col">
+          <fieldset>
+            <input type="text" name="name" id="feedback-name" required />
+            <label for="feedback-name">Your name</label>
+          </fieldset>
+          <fieldset>
+            <input type="text" name="email" id="feedback-email" required />
+            <label for="feedback-email">Your email</label>
+          </fieldset>
+        </div>
+        <div class="form-col">
+          <fieldset>
+            <input type="text" name="company" id="feedback-company" required />
+            <label for="feedback-company">Your company</label>
+          </fieldset>
+        </div>
+      </div>
+
+      <div class="modal-section modal-form arrow">
+        <textarea name="message" id="feedback-message" placeholder="Describe to us what does not seem to work properly."></textarea>
+      </div>
+
+      <div class="modal-section modal-form arrow arrow-center" id="feedback-includes">
+        <div class="modal-form__checkbox">
+          <input type="checkbox" name="include_analysis" id="feedback-analysis" />
+          <label for="feedback-analysis"><span></span> Include analysis</label>
+        </div>
+        <div class="modal-form__checkbox">
+          <input type="checkbox" name="include_memdump" id="feedback-memdump" />
+          <label for="feedback-memdump"><span></span> Include memory dump</label>
+        </div>
+      </div>
+
+      <div class="modal-section modal-form no-flex center">
+        <p id="feedback-size">Estimated report size: <strong class="file-estimation">estimating...</strong></p>
+        <button class="modal-submit" type="submit" formnovalidate>Send feedback report</button>
+        <p>or <a href="modal:cancel">cancel</a></p>
+      </div>
+
+      <div class="modal-section modal-footer center"></div>
+    </div>
+  </form>
+</div>
+
+
+    <!-- cuckoo freeze-page loader -->
+    <div class="page-freeze" id="page-freeze-container">
+        <div class="page-freeze__graphic">
+            <img src="/static/graphic/cuckoo-coffee-cup.png" alt="Cuckoo" />
+        </div>
+        <div class="page-freeze__animation">
+            <!-- spinner -->
+            <div class="page-freeze__spinner">
+                <div class="page-freeze__spinner--c1"></div>
+                <div class="page-freeze__spinner--c2"></div>
+            </div>
+        </div>
+        <div class="page-freeze__context">
+            <p class="page-freeze__message">We're processing your submission... This could take a few seconds.</p>
+            <div class="page-freeze__options hidden">
+                <button class="btn btn-default btn-lg close-page-freeze">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIGHLIGHT (_office.html, _pdf.html) -->
+    <script>
+        $(document).ready(function() {
+          if(!window.hljs) return;
+          hljs.initHighlightingOnLoad();
+        });
+    </script>
+
+    <!-- RECENT PAGE CODE (analysis/index.html) -->
+    <script>
+
+        $(document).ready(function() {
+
+            // only do this if we are on the recent page
+            if(!$('table#recent').length) return;
+
+            var recent;
+
+            $('body').on('click', 'div.nav_container>div', function() {
+
+                var btn_id = $(this).find("a").attr("data-filter");
+                var btn_active = $(this).attr('class');
+                var btn_categories = ["cat_files", "cat_urls"];
+
+                if($('a[data-filter^="score"]', this).length) {
+                    var score_choice = $(this).find('a').attr('data-filter');
+
+                    $('.nav_container>div#item>a[data-filter^="score"]').each(function(i, obj){
+                        obj = $(obj);
+                        var uid = obj.attr('data-filter');
+
+                        if(uid != score_choice){
+                            obj.parent().removeClass('active');
+                        }
+                    });
+                }
+
+                if(!btn_active){
+                    // when a category button is clicked, force deselection of adjacent categories
+                    if(btn_id.startsWith("cat_")){
+                        btn_categories.forEach(function (category) {
+                            if (category != btn_id) {
+                                category = $('.nav_container>div#item>a[data-filter="' + category + '"]').parent();
+
+                                if (category.hasClass("active")) { category.removeClass("active"); }
+                            }
+                        });
+                    }
+
+                    $(this).addClass('active');
+                    var filter = $(this).attr('data-filter');
+                    recent.load();
+                } else {
+                    $(this).removeClass('active');
+                    recent.load();
+                }
+            });
+
+            recent = new Recent();
+            recent.load();
+
+            // Detect end of page scroll
+            $(window).scroll(function() {
+               if($(window).scrollTop() + $(window).height() == $(document).height()) {
+                    if(!recent.empty_results) recent.lazy_load();
+               }
+            });
+
+        });
+    </script>
+
+    <!-- IMPORT PAGE (import.html) -->
+    <script type='text/javascript'>
+
+        if(document.getElementById('analysis/import') !== null) {
+
+            $(document)
+                .on('change', '.btn-file :file', function() {
+                    var input = $(this),
+                    numFiles = input.get(0).files ? input.get(0).files.length : 1,
+                    label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+                    input.trigger('fileselect', [numFiles, label]);
+            });
+
+            $(document).ready( function() {
+                $('.btn-file :file').on('fileselect', function(event, numFiles, label) {
+
+                    var input = $(this).parents('.input-group').find(':text'),
+                        log = numFiles > 1 ? numFiles + ' files selected' : label;
+
+                    if( input.length ) {
+                        input.val(log);
+                    } else {
+                        if( log ) alert(log);
+                    }
+
+                });
+            });
+
+        }
+
+    </script>
+
+    <!-- WEBIF ANALYSIS  -->
+    <script>
+
+        $(document).ready(function(){
+
+            $("#btn_screenshots_toggle").click(function(){
+                $(this).parent().parent().parent().find('.panel-body').toggleClass("minified");
+            });
+
+            if($("table#network-hosts, table#network-dns").length) {
+
+                setTimeout(function () {
+                    ["network_hosts", "network_dns"].forEach(function (x) {
+                        $('#' + x).DataTable({
+                            responsive: true,
+                            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                            "pageLength": 10,
+                            "language": {
+                                "lengthMenu": "Show _MENU_ results",
+                                "zeroRecords": "No results",
+                                "info": "_PAGE_/_PAGES_"
+                            }
+                        });
+                    });
+                }, 200);
+
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>
+
